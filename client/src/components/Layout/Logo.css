@@ -1,0 +1,68 @@
+.logo-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 1.5em;
+  height: 1.5em;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 1.2em;
+  letter-spacing: -0.5px;
+}
+
+/* Size variants */
+.logo-small .logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.logo-small .logo-text {
+  font-size: 1em;
+}
+
+.logo-medium .logo-icon {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.logo-medium .logo-text {
+  font-size: 1.2em;
+}
+
+.logo-large .logo-icon {
+  width: 2em;
+  height: 2em;
+}
+
+.logo-large .logo-text {
+  font-size: 1.5em;
+}
+
+/* Navbar specific styling */
+.navbar-brand .logo-container {
+  color: #667eea; /* Purple color to match navbar brand */
+}
+
+.navbar-brand .logo-icon {
+  color: #667eea; /* Purple color for the icon */
+}
+
+/* Auth page specific styling */
+.auth-card .logo-container {
+  justify-content: center;
+  color: #667eea;
+}
+
+.auth-card .logo-icon {
+  color: #667eea;
+}
+
