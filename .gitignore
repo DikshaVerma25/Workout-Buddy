@@ -4,6 +4,10 @@ server/node_modules/
 server/data/
 client/build/
 .env
+.env.local
+.env.production
 .DS_Store
 *.log
+.vscode/
+.idea/
 

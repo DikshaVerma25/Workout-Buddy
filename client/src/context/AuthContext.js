@@ -38,8 +38,9 @@ export function AuthProvider({ children }) {
       
       if (error.response) {
         errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
-      } else if (error.request) {
-        errorMessage = 'Cannot connect to server. Make sure the server is running on http://localhost:5001';
+          } else if (error.request) {
+            const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+            errorMessage = `Cannot connect to server. Check if the backend is running at ${apiUrl}`;
       } else {
         errorMessage = error.message || 'Login failed';
       }
@@ -75,7 +76,8 @@ export function AuthProvider({ children }) {
         errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
       } else if (error.request) {
         // Request made but no response
-        errorMessage = 'Cannot connect to server. Make sure the server is running on http://localhost:5001';
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+        errorMessage = `Cannot connect to server. Check if the backend is running at ${apiUrl}`;
       } else {
         // Something else happened
         errorMessage = error.message || 'Registration failed';

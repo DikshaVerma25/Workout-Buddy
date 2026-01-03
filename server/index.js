@@ -11,7 +11,10 @@ const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*', // Allow all origins in development, set specific URL in production
+  credentials: true
+}));
 app.use(express.json());
 
 // Data storage (using JSON files - can be upgraded to a real database)
@@ -76,6 +79,19 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Workout Buddy API Server',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      register: '/api/auth/register',
+      login: '/api/auth/login'
+    }
+  });
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
