@@ -101,14 +101,45 @@ app.get('/api/health', (req, res) => {
 // Stats endpoint (public - shows basic stats)
 app.get('/api/stats', async (req, res) => {
   try {
+    console.log('=== STATS ENDPOINT CALLED ===');
+    console.log('USERS_FILE path:', USERS_FILE);
+    console.log('DATA_DIR path:', DATA_DIR);
+    
+    // Check if file exists
+    try {
+      await fs.access(USERS_FILE);
+      console.log('✅ USERS_FILE exists');
+    } catch {
+      console.log('❌ USERS_FILE does not exist');
+    }
+
     const users = await readData(USERS_FILE);
     const workouts = await readData(WORKOUTS_FILE);
     const friendships = await readData(FRIENDSHIPS_FILE);
+
+    // Check if file exists
+    let fileExists = false;
+    try {
+      await fs.access(USERS_FILE);
+      fileExists = true;
+    } catch {
+      fileExists = false;
+    }
+
+    console.log('Users read:', users.length);
+    console.log('Workouts read:', workouts.length);
+    console.log('Friendships read:', friendships.length);
+    console.log('Users data:', JSON.stringify(users, null, 2));
 
     res.json({
       totalUsers: users.length,
       totalWorkouts: workouts.length,
       totalFriendships: friendships.length,
+      debug: {
+        usersFilePath: USERS_FILE,
+        dataDirPath: DATA_DIR,
+        fileExists: fileExists
+      },
       users: users.map(u => ({
         id: u.id,
         username: u.username,
@@ -118,20 +149,27 @@ app.get('/api/stats', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
-    res.status(500).json({ error: 'Error fetching stats' });
+    res.status(500).json({ 
+      error: 'Error fetching stats',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
 // Auth Routes
 app.post('/api/auth/register', async (req, res) => {
   try {
+    console.log('=== REGISTRATION REQUEST ===');
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
 
+    console.log('Reading users from:', USERS_FILE);
     const users = await readData(USERS_FILE);
+    console.log('Current users count:', users.length);
 
     if (users.find(u => u.email === email)) {
       return res.status(400).json({ error: 'Email already registered' });
@@ -151,7 +189,13 @@ app.post('/api/auth/register', async (req, res) => {
     };
 
     users.push(newUser);
+    console.log('Writing users to:', USERS_FILE);
+    console.log('Total users after adding:', users.length);
     await writeData(USERS_FILE, users);
+    
+    // Verify it was written
+    const verifyUsers = await readData(USERS_FILE);
+    console.log('Verified users count after write:', verifyUsers.length);
 
     const token = jwt.sign({ id: newUser.id, username: newUser.username }, JWT_SECRET);
 
