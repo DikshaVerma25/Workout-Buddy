@@ -98,6 +98,30 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// Stats endpoint (public - shows basic stats)
+app.get('/api/stats', async (req, res) => {
+  try {
+    const users = await readData(USERS_FILE);
+    const workouts = await readData(WORKOUTS_FILE);
+    const friendships = await readData(FRIENDSHIPS_FILE);
+
+    res.json({
+      totalUsers: users.length,
+      totalWorkouts: workouts.length,
+      totalFriendships: friendships.length,
+      users: users.map(u => ({
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        createdAt: u.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Error fetching stats' });
+  }
+});
+
 // Auth Routes
 app.post('/api/auth/register', async (req, res) => {
   try {
