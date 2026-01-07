@@ -19,6 +19,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Helper function to validate and convert user ID to ObjectId
+function toObjectId(id) {
+  if (!id) {
+    return null;
+  }
+  // Check if it's already a valid ObjectId string (24 hex characters)
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    return mongoose.Types.ObjectId(id);
+  }
+  return null;
+}
+
 // Authentication middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -32,7 +44,22 @@ function authenticateToken(req, res, next) {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
-    req.user = user;
+    
+    // Validate that user.id is a valid MongoDB ObjectId
+    const userId = toObjectId(user.id);
+    if (!userId) {
+      return res.status(401).json({ 
+        error: 'Invalid token format. Please log in again.' 
+      });
+    }
+    
+    // Store both original and ObjectId version
+    req.user = {
+      ...user,
+      id: userId.toString(), // Keep as string for consistency
+      _id: userId // Store ObjectId for queries
+    };
+    
     next();
   });
 }
@@ -93,24 +120,25 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
+    // Normalize email to lowercase for consistency
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedUsername = username.trim();
 
-    if (existingUser) {
-      if (existingUser.email === email) {
-        return res.status(400).json({ error: 'Email already registered' });
-      }
-      if (existingUser.username === username) {
-        return res.status(400).json({ error: 'Username already taken' });
-      }
+    // Check if user already exists (check both email and username separately for better error messages)
+    const existingUserByEmail = await User.findOne({ email: normalizedEmail });
+    if (existingUserByEmail) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    const existingUserByUsername = await User.findOne({ username: normalizedUsername });
+    if (existingUserByUsername) {
+      return res.status(400).json({ error: 'Username already taken' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
-      username,
-      email,
+      username: normalizedUsername,
+      email: normalizedEmail,
       password: hashedPassword
     });
 
@@ -131,11 +159,17 @@ app.post('/api/auth/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
+    // Handle MongoDB duplicate key error (race condition fallback)
     if (error.code === 11000) {
-      // Duplicate key error
       const field = Object.keys(error.keyPattern)[0];
+      if (field === 'email') {
+        return res.status(400).json({ error: 'Email already registered' });
+      }
+      if (field === 'username') {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
       return res.status(400).json({ 
-        error: `${field === 'email' ? 'Email' : 'Username'} already exists` 
+        error: `${field} already exists` 
       });
     }
     res.status(500).json({ 
@@ -189,7 +223,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Workout Routes
 app.get('/api/workouts', authenticateToken, async (req, res) => {
   try {
-    const workouts = await Workout.find({ userId: req.user.id })
+    const workouts = await Workout.find({ userId: req.user._id })
       .sort({ date: -1, createdAt: -1 });
     
     // Convert to format expected by frontend
@@ -231,7 +265,7 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
     const workoutType = type || 'strength training';
 
     const newWorkout = new Workout({
-      userId: req.user.id,
+      userId: req.user._id,
       exercise: exercise.trim(),
       type: workoutType,
       sets: sets || null,
@@ -275,7 +309,7 @@ app.delete('/api/workouts/:id', authenticateToken, async (req, res) => {
   try {
     const workout = await Workout.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId: req.user._id
     });
 
     if (!workout) {
@@ -302,8 +336,8 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
     // Get all friendships (pending, accepted, rejected) to exclude from search
     const allFriendships = await Friendship.find({
       $or: [
-        { userId: req.user.id },
-        { friendId: req.user.id }
+        { userId: req.user._id },
+        { friendId: req.user._id }
       ]
     });
 
@@ -317,8 +351,8 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
       }
     });
 
-    const excludedObjectIds = Array.from(excludedIds).map(id => mongoose.Types.ObjectId(id));
-    const currentUserId = mongoose.Types.ObjectId(req.user.id);
+    const excludedObjectIds = Array.from(excludedIds).filter(id => mongoose.Types.ObjectId.isValid(id)).map(id => mongoose.Types.ObjectId(id));
+    const currentUserId = req.user._id;
 
     const searchQuery = {
       _id: { 
@@ -352,8 +386,8 @@ app.get('/api/friends', authenticateToken, async (req, res) => {
     const friendships = await Friendship.find({
       status: 'accepted',
       $or: [
-        { userId: req.user.id },
-        { friendId: req.user.id }
+        { userId: req.user._id },
+        { friendId: req.user._id }
       ]
     }).populate('userId', 'username email').populate('friendId', 'username email');
 
@@ -381,8 +415,8 @@ app.get('/api/friends/requests', authenticateToken, async (req, res) => {
     const pendingRequests = await Friendship.find({
       status: 'pending',
       $or: [
-        { userId: req.user.id },
-        { friendId: req.user.id }
+        { userId: req.user._id },
+        { friendId: req.user._id }
       ]
     }).populate('userId', 'username email').populate('friendId', 'username email');
 
@@ -427,7 +461,7 @@ app.post('/api/friends', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Friend ID is required' });
     }
 
-    if (friendId.toString() === req.user.id.toString()) {
+    if (friendId.toString() === req.user._id.toString()) {
       return res.status(400).json({ error: 'Cannot add yourself as a friend' });
     }
 
@@ -439,8 +473,8 @@ app.post('/api/friends', authenticateToken, async (req, res) => {
     // Check if any friendship already exists (pending, accepted, or rejected)
     const existingFriendship = await Friendship.findOne({
       $or: [
-        { userId: req.user.id, friendId },
-        { userId: friendId, friendId: req.user.id }
+        { userId: req.user._id, friendId },
+        { userId: friendId, friendId: req.user._id }
       ]
     });
 
@@ -456,7 +490,7 @@ app.post('/api/friends', authenticateToken, async (req, res) => {
     }
 
     const newFriendship = new Friendship({
-      userId: req.user.id,
+      userId: req.user._id,
       friendId,
       status: 'pending'
     });
@@ -481,7 +515,7 @@ app.put('/api/friends/requests/:requestId/accept', authenticateToken, async (req
   try {
     const friendship = await Friendship.findOne({
       _id: req.params.requestId,
-      friendId: req.user.id, // Only the recipient can accept
+      friendId: req.user._id, // Only the recipient can accept
       status: 'pending'
     }).populate('userId', 'username email');
 
@@ -512,8 +546,8 @@ app.delete('/api/friends/requests/:requestId', authenticateToken, async (req, re
       _id: req.params.requestId,
       status: 'pending',
       $or: [
-        { userId: req.user.id }, // Can cancel sent request
-        { friendId: req.user.id } // Can reject received request
+        { userId: req.user._id }, // Can cancel sent request
+        { friendId: req.user._id } // Can reject received request
       ]
     });
 
@@ -535,8 +569,8 @@ app.delete('/api/friends/:friendshipId', authenticateToken, async (req, res) => 
     const friendship = await Friendship.findOne({
       _id: req.params.friendshipId,
       $or: [
-        { userId: req.user.id },
-        { friendId: req.user.id }
+        { userId: req.user._id },
+        { friendId: req.user._id }
       ]
     });
 
@@ -559,12 +593,12 @@ app.get('/api/feed', authenticateToken, async (req, res) => {
     const friendships = await Friendship.find({
       status: 'accepted',
       $or: [
-        { userId: req.user.id },
-        { friendId: req.user.id }
+        { userId: req.user._id },
+        { friendId: req.user._id }
       ]
     });
 
-    const friendIds = new Set([req.user.id]); // Include own workouts
+    const friendIds = new Set([req.user._id.toString()]); // Include own workouts
     friendships.forEach(f => {
       if (f.userId.toString() === req.user.id) {
         friendIds.add(f.friendId.toString());
@@ -617,12 +651,12 @@ app.get('/api/leaderboard', authenticateToken, async (req, res) => {
     const friendships = await Friendship.find({
       status: 'accepted',
       $or: [
-        { userId: req.user.id },
-        { friendId: req.user.id }
+        { userId: req.user._id },
+        { friendId: req.user._id }
       ]
     });
 
-    const friendIds = new Set([req.user.id]);
+    const friendIds = new Set([req.user._id.toString()]);
     friendships.forEach(f => {
       if (f.userId.toString() === req.user.id) {
         friendIds.add(f.friendId.toString());
