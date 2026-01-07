@@ -252,8 +252,15 @@ app.get('/api/workouts', authenticateToken, async (req, res) => {
 app.post('/api/workouts', authenticateToken, async (req, res) => {
   try {
     console.log('=== WORKOUT CREATION REQUEST ===');
-    console.log('User ID:', req.user._id);
+    console.log('User object:', req.user);
+    console.log('User ID:', req.user?._id);
     console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
+    // Validate user is authenticated
+    if (!req.user || !req.user._id) {
+      console.error('Authentication error: User ID not found');
+      return res.status(401).json({ error: 'User authentication failed' });
+    }
     
     const { exercise, type, sets, reps, weight, duration, durationUnit, date, notes } = req.body;
 
@@ -751,6 +758,27 @@ app.get('/api/leaderboard', authenticateToken, async (req, res) => {
     console.error('Error fetching leaderboard:', error);
     res.status(500).json({ error: 'Error fetching leaderboard' });
   }
+});
+
+// Global error handler middleware (must be after all routes)
+app.use((err, req, res, next) => {
+  console.error('=== UNHANDLED ERROR ===');
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message,
+    details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.path
+  });
 });
 
 // Initialize server
