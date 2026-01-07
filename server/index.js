@@ -251,35 +251,70 @@ app.get('/api/workouts', authenticateToken, async (req, res) => {
 
 app.post('/api/workouts', authenticateToken, async (req, res) => {
   try {
+    console.log('=== WORKOUT CREATION REQUEST ===');
+    console.log('User ID:', req.user._id);
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const { exercise, type, sets, reps, weight, duration, durationUnit, date, notes } = req.body;
 
     // Basic validation
     if (!exercise || !exercise.trim()) {
+      console.error('Validation error: Exercise is required');
       return res.status(400).json({ error: 'Exercise is required' });
     }
 
     if (!date) {
+      console.error('Validation error: Date is required');
       return res.status(400).json({ error: 'Date is required' });
     }
 
     const workoutType = type || 'strength training';
 
+    // Parse date safely - handle YYYY-MM-DD format
+    let workoutDate;
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      // Date is in YYYY-MM-DD format, parse it to avoid timezone issues
+      const [year, month, day] = date.split('-').map(Number);
+      workoutDate = new Date(year, month - 1, day);
+    } else {
+      workoutDate = new Date(date);
+    }
+
+    // Validate date
+    if (isNaN(workoutDate.getTime())) {
+      console.error('Validation error: Invalid date format', date);
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+
+    console.log('Creating workout with:', {
+      userId: req.user._id,
+      exercise: exercise.trim(),
+      type: workoutType,
+      date: workoutDate,
+      duration,
+      durationUnit
+    });
+
     const newWorkout = new Workout({
       userId: req.user._id,
       exercise: exercise.trim(),
       type: workoutType,
-      sets: sets || null,
-      reps: reps || null,
+      sets: sets ? parseFloat(sets) : null,
+      reps: reps ? parseFloat(reps) : null,
       weight: weight ? parseFloat(weight) : null,
       duration: duration ? parseFloat(duration) : null,
       durationUnit: duration ? (durationUnit || 'minutes') : null,
-      date: new Date(date),
+      date: workoutDate,
       notes: notes || ''
     });
 
     await newWorkout.save();
+    console.log('Workout saved successfully:', newWorkout._id);
 
     // Format response for frontend
+    // Format date as YYYY-MM-DD string for consistency
+    const dateStr = newWorkout.date.toISOString().split('T')[0];
+    
     const formattedWorkout = {
       id: newWorkout._id.toString(),
       userId: newWorkout.userId.toString(),
@@ -290,16 +325,31 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
       weight: newWorkout.weight,
       duration: newWorkout.duration,
       durationUnit: newWorkout.durationUnit,
-      date: newWorkout.date,
+      date: dateStr,
       notes: newWorkout.notes,
       createdAt: newWorkout.createdAt
     };
 
     res.status(201).json(formattedWorkout);
   } catch (error) {
-    console.error('Error creating workout:', error);
+    console.error('=== ERROR CREATING WORKOUT ===');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Full error:', error);
+    
+    // Provide more detailed error information
+    let errorMessage = 'Error creating workout';
+    if (error.name === 'ValidationError') {
+      errorMessage = `Validation error: ${error.message}`;
+    } else if (error.name === 'CastError') {
+      errorMessage = `Invalid data format: ${error.message}`;
+    } else {
+      errorMessage = error.message || 'Error creating workout';
+    }
+    
     res.status(500).json({ 
-      error: 'Error creating workout',
+      error: errorMessage,
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
