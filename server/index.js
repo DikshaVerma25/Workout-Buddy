@@ -397,6 +397,10 @@ app.delete('/api/workouts/:id', authenticateToken, async (req, res) => {
 app.get('/api/users/search', authenticateToken, async (req, res) => {
   try {
     const { query } = req.query;
+    console.log('=== USER SEARCH REQUEST ===');
+    console.log('Search query:', query);
+    console.log('Current user ID:', req.user._id.toString());
+    
     if (!query) {
       return res.json([]);
     }
@@ -409,15 +413,20 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
       ]
     });
 
+    console.log('Found friendships:', allFriendships.length);
+
     const excludedIds = new Set();
+    const currentUserIdStr = req.user._id.toString();
     allFriendships.forEach(f => {
-      if (f.userId.toString() === req.user.id) {
+      if (f.userId.toString() === currentUserIdStr) {
         excludedIds.add(f.friendId.toString());
       }
-      if (f.friendId.toString() === req.user.id) {
+      if (f.friendId.toString() === currentUserIdStr) {
         excludedIds.add(f.userId.toString());
       }
     });
+
+    console.log('Excluded user IDs:', Array.from(excludedIds));
 
     const excludedObjectIds = Array.from(excludedIds).filter(id => mongoose.Types.ObjectId.isValid(id)).map(id => new mongoose.Types.ObjectId(id));
     const currentUserId = req.user._id;
@@ -433,15 +442,22 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
       ]
     };
 
+    console.log('MongoDB search query:', JSON.stringify(searchQuery, null, 2));
+
     const users = await User.find(searchQuery)
       .select('username email')
       .limit(10);
 
-    res.json(users.map(u => ({
+    console.log('Found users:', users.length);
+
+    const results = users.map(u => ({
       id: u._id.toString(),
       username: u.username,
       email: u.email
-    })));
+    }));
+
+    console.log('Search results:', results);
+    res.json(results);
   } catch (error) {
     console.error('Error searching users:', error);
     res.status(500).json({ error: 'Error searching users' });

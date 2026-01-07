@@ -32,7 +32,12 @@ function Friends() {
 
   const fetchFriends = async () => {
     try {
-      const response = await axios.get(`${API_URL}/friends`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/friends`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setFriends(response.data);
     } catch (error) {
       console.error('Error fetching friends:', error);
@@ -43,7 +48,12 @@ function Friends() {
 
   const fetchPendingRequests = async () => {
     try {
-      const response = await axios.get(`${API_URL}/friends/requests`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/friends/requests`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setPendingRequests(response.data);
     } catch (error) {
       console.error('Error fetching pending requests:', error);
@@ -55,12 +65,18 @@ function Friends() {
     
     setSearching(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/users/search`, {
-        params: { query: searchQuery }
+        params: { query: searchQuery },
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       setSearchResults(response.data);
+      console.log('Search results:', response.data);
     } catch (error) {
       console.error('Error searching users:', error);
+      console.error('Error response:', error.response?.data);
     } finally {
       setSearching(false);
     }
@@ -68,7 +84,12 @@ function Friends() {
 
   const sendFriendRequest = async (friendId) => {
     try {
-      await axios.post(`${API_URL}/friends`, { friendId });
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/friends`, { friendId }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setSearchQuery('');
       setSearchResults([]);
       await fetchPendingRequests(); // Refresh pending requests
@@ -85,7 +106,12 @@ function Friends() {
 
   const acceptFriendRequest = async (requestId) => {
     try {
-      await axios.put(`${API_URL}/friends/requests/${requestId}/accept`);
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_URL}/friends/requests/${requestId}/accept`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       await fetchFriends(); // Refresh friends list
       await fetchPendingRequests(); // Refresh pending requests
       setMessage({ type: 'success', text: 'Friend request accepted!' });
@@ -101,7 +127,12 @@ function Friends() {
 
   const rejectFriendRequest = async (requestId) => {
     try {
-      await axios.delete(`${API_URL}/friends/requests/${requestId}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/friends/requests/${requestId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       await fetchPendingRequests(); // Refresh pending requests
       setMessage({ type: 'success', text: 'Friend request removed' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -120,7 +151,12 @@ function Friends() {
     }
 
     try {
-      await axios.delete(`${API_URL}/friends/${friendshipId}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/friends/${friendshipId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setFriends(friends.filter(f => f.friendshipId !== friendshipId));
       setMessage({ type: 'success', text: 'Friend removed successfully!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
