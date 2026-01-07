@@ -86,8 +86,9 @@ function Dashboard() {
   };
 
   const todayWorkouts = workouts.filter(w => {
-    const workoutDate = new Date(w.date).toDateString();
-    const today = new Date().toDateString();
+    // workout.date is already a YYYY-MM-DD string
+    const today = new Date().toISOString().split('T')[0];
+    const workoutDate = typeof w.date === 'string' ? w.date : new Date(w.date).toISOString().split('T')[0];
     return workoutDate === today;
   });
 
@@ -97,9 +98,13 @@ function Dashboard() {
   const calculateStreak = () => {
     if (workouts.length === 0) return 0;
 
-    // Get unique dates that have workouts, normalized to midnight
+    // Get unique dates that have workouts
+    // workout.date is already a YYYY-MM-DD string
     const workoutDates = [...new Set(workouts.map(w => {
-      const date = new Date(w.date);
+      const dateStr = typeof w.date === 'string' ? w.date : new Date(w.date).toISOString().split('T')[0];
+      // Convert YYYY-MM-DD to timestamp for comparison
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
       date.setHours(0, 0, 0, 0);
       return date.getTime();
     }))].sort((a, b) => b - a); // Sort descending (most recent first)
