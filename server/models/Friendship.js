@@ -13,8 +13,8 @@ const friendshipSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'accepted'],
-    default: 'accepted'
+    enum: ['pending', 'accepted', 'rejected'],
+    default: 'pending'
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt automatically

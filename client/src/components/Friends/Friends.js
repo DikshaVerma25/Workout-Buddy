@@ -7,6 +7,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 function Friends() {
   const [friends, setFriends] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState({ sent: [], received: [] });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,7 @@ function Friends() {
 
   useEffect(() => {
     fetchFriends();
+    fetchPendingRequests();
   }, []);
 
   useEffect(() => {
@@ -39,6 +41,15 @@ function Friends() {
     }
   };
 
+  const fetchPendingRequests = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/friends/requests`);
+      setPendingRequests(response.data);
+    } catch (error) {
+      console.error('Error fetching pending requests:', error);
+    }
+  };
+
   const searchUsers = async () => {
     if (!searchQuery.trim()) return;
     
@@ -55,18 +66,49 @@ function Friends() {
     }
   };
 
-  const addFriend = async (friendId) => {
+  const sendFriendRequest = async (friendId) => {
     try {
-      const response = await axios.post(`${API_URL}/friends`, { friendId });
-      setFriends([...friends, response.data]);
+      await axios.post(`${API_URL}/friends`, { friendId });
       setSearchQuery('');
       setSearchResults([]);
-      setMessage({ type: 'success', text: 'Friend added successfully!' });
+      await fetchPendingRequests(); // Refresh pending requests
+      setMessage({ type: 'success', text: 'Friend request sent!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.error || 'Failed to add friend'
+        text: error.response?.data?.error || 'Failed to send friend request'
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    }
+  };
+
+  const acceptFriendRequest = async (requestId) => {
+    try {
+      await axios.put(`${API_URL}/friends/requests/${requestId}/accept`);
+      await fetchFriends(); // Refresh friends list
+      await fetchPendingRequests(); // Refresh pending requests
+      setMessage({ type: 'success', text: 'Friend request accepted!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Failed to accept friend request'
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    }
+  };
+
+  const rejectFriendRequest = async (requestId) => {
+    try {
+      await axios.delete(`${API_URL}/friends/requests/${requestId}`);
+      await fetchPendingRequests(); // Refresh pending requests
+      setMessage({ type: 'success', text: 'Friend request removed' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Failed to remove friend request'
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     }
@@ -91,6 +133,11 @@ function Friends() {
     }
   };
 
+  const isPendingRequest = (userId) => {
+    return pendingRequests.sent.some(req => req.userId === userId) ||
+           pendingRequests.received.some(req => req.userId === userId);
+  };
+
   return (
     <div>
       <Navbar />
@@ -103,6 +150,74 @@ function Friends() {
           </div>
         )}
 
+        {/* Pending Friend Requests - Received */}
+        {pendingRequests.received.length > 0 && (
+          <div className="card">
+            <h2>Friend Requests ({pendingRequests.received.length})</h2>
+            <div className="requests-list">
+              {pendingRequests.received.map(request => (
+                <div key={request.id} className="request-item">
+                  <div className="user-info">
+                    <div className="friend-avatar">
+                      {request.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <strong>{request.username}</strong>
+                      <span className="user-email">{request.email}</span>
+                    </div>
+                  </div>
+                  <div className="request-actions">
+                    <button
+                      className="btn btn-primary btn-small"
+                      onClick={() => acceptFriendRequest(request.id)}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="btn btn-danger btn-small"
+                      onClick={() => rejectFriendRequest(request.id)}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pending Friend Requests - Sent */}
+        {pendingRequests.sent.length > 0 && (
+          <div className="card">
+            <h2>Sent Requests ({pendingRequests.sent.length})</h2>
+            <div className="requests-list">
+              {pendingRequests.sent.map(request => (
+                <div key={request.id} className="request-item">
+                  <div className="user-info">
+                    <div className="friend-avatar">
+                      {request.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <strong>{request.username}</strong>
+                      <span className="user-email">{request.email}</span>
+                    </div>
+                  </div>
+                  <div className="request-actions">
+                    <span className="request-status">Pending</span>
+                    <button
+                      className="btn btn-danger btn-small"
+                      onClick={() => rejectFriendRequest(request.id)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Search for Friends */}
         <div className="card">
           <h2>Add Friend</h2>
           <div className="search-container">
@@ -118,20 +233,27 @@ function Friends() {
 
           {searchResults.length > 0 && (
             <div className="search-results">
-              {searchResults.map(user => (
-                <div key={user.id} className="search-result-item">
-                  <div className="user-info">
-                    <strong>{user.username}</strong>
-                    <span className="user-email">{user.email}</span>
+              {searchResults.map(user => {
+                const isPending = isPendingRequest(user.id);
+                return (
+                  <div key={user.id} className="search-result-item">
+                    <div className="user-info">
+                      <strong>{user.username}</strong>
+                      <span className="user-email">{user.email}</span>
+                    </div>
+                    {isPending ? (
+                      <span className="request-sent">Request Sent</span>
+                    ) : (
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => sendFriendRequest(user.id)}
+                      >
+                        Send Request
+                      </button>
+                    )}
                   </div>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => addFriend(user.id)}
-                  >
-                    Add Friend
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -140,13 +262,14 @@ function Friends() {
           )}
         </div>
 
+        {/* Accepted Friends List */}
         <div className="card">
           <h2>Friends List ({friends.length})</h2>
           {loading ? (
             <div className="loading">Loading friends...</div>
           ) : friends.length === 0 ? (
             <div className="empty-state">
-              <p>You don't have any friends yet. Search above to add some!</p>
+              <p>You don't have any friends yet. Search above to send friend requests!</p>
             </div>
           ) : (
             <div className="friends-grid">

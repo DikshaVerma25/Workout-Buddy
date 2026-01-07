@@ -299,30 +299,31 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
       return res.json([]);
     }
 
-    const friendships = await Friendship.find({
+    // Get all friendships (pending, accepted, rejected) to exclude from search
+    const allFriendships = await Friendship.find({
       $or: [
         { userId: req.user.id },
         { friendId: req.user.id }
       ]
     });
 
-    const friendIds = new Set();
-    friendships.forEach(f => {
+    const excludedIds = new Set();
+    allFriendships.forEach(f => {
       if (f.userId.toString() === req.user.id) {
-        friendIds.add(f.friendId.toString());
+        excludedIds.add(f.friendId.toString());
       }
       if (f.friendId.toString() === req.user.id) {
-        friendIds.add(f.userId.toString());
+        excludedIds.add(f.userId.toString());
       }
     });
 
-    const friendObjectIds = Array.from(friendIds).map(id => mongoose.Types.ObjectId(id));
+    const excludedObjectIds = Array.from(excludedIds).map(id => mongoose.Types.ObjectId(id));
     const currentUserId = mongoose.Types.ObjectId(req.user.id);
 
     const searchQuery = {
       _id: { 
         $ne: currentUserId,
-        $nin: friendObjectIds
+        $nin: excludedObjectIds
       },
       $or: [
         { username: { $regex: query, $options: 'i' } },
@@ -345,9 +346,11 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
   }
 });
 
+// Get accepted friends only
 app.get('/api/friends', authenticateToken, async (req, res) => {
   try {
     const friendships = await Friendship.find({
+      status: 'accepted',
       $or: [
         { userId: req.user.id },
         { friendId: req.user.id }
@@ -372,6 +375,50 @@ app.get('/api/friends', authenticateToken, async (req, res) => {
   }
 });
 
+// Get pending friend requests (sent and received)
+app.get('/api/friends/requests', authenticateToken, async (req, res) => {
+  try {
+    const pendingRequests = await Friendship.find({
+      status: 'pending',
+      $or: [
+        { userId: req.user.id },
+        { friendId: req.user.id }
+      ]
+    }).populate('userId', 'username email').populate('friendId', 'username email');
+
+    const sentRequests = [];
+    const receivedRequests = [];
+
+    pendingRequests.forEach(f => {
+      const isSender = f.userId._id.toString() === req.user.id;
+      const otherUser = isSender ? f.friendId : f.userId;
+      
+      const requestData = {
+        id: f._id.toString(),
+        userId: otherUser._id.toString(),
+        username: otherUser.username,
+        email: otherUser.email,
+        createdAt: f.createdAt
+      };
+
+      if (isSender) {
+        sentRequests.push(requestData);
+      } else {
+        receivedRequests.push(requestData);
+      }
+    });
+
+    res.json({
+      sent: sentRequests,
+      received: receivedRequests
+    });
+  } catch (error) {
+    console.error('Error fetching friend requests:', error);
+    res.status(500).json({ error: 'Error fetching friend requests' });
+  }
+});
+
+// Send friend request (creates with status: pending)
 app.post('/api/friends', authenticateToken, async (req, res) => {
   try {
     const { friendId } = req.body;
@@ -380,7 +427,7 @@ app.post('/api/friends', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Friend ID is required' });
     }
 
-    if (friendId === req.user.id) {
+    if (friendId.toString() === req.user.id.toString()) {
       return res.status(400).json({ error: 'Cannot add yourself as a friend' });
     }
 
@@ -389,7 +436,7 @@ app.post('/api/friends', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if friendship already exists
+    // Check if any friendship already exists (pending, accepted, or rejected)
     const existingFriendship = await Friendship.findOne({
       $or: [
         { userId: req.user.id, friendId },
@@ -398,12 +445,20 @@ app.post('/api/friends', authenticateToken, async (req, res) => {
     });
 
     if (existingFriendship) {
-      return res.status(400).json({ error: 'Friendship already exists' });
+      if (existingFriendship.status === 'pending') {
+        return res.status(400).json({ error: 'Friend request already sent' });
+      }
+      if (existingFriendship.status === 'accepted') {
+        return res.status(400).json({ error: 'Already friends' });
+      }
+      // If rejected, allow sending a new request by deleting the old one
+      await Friendship.deleteOne({ _id: existingFriendship._id });
     }
 
     const newFriendship = new Friendship({
       userId: req.user.id,
-      friendId
+      friendId,
+      status: 'pending'
     });
 
     await newFriendship.save();
@@ -412,11 +467,66 @@ app.post('/api/friends', authenticateToken, async (req, res) => {
       id: friend._id.toString(),
       username: friend.username,
       email: friend.email,
-      friendshipId: newFriendship._id.toString()
+      requestId: newFriendship._id.toString(),
+      status: 'pending'
     });
   } catch (error) {
-    console.error('Error adding friend:', error);
-    res.status(500).json({ error: 'Error adding friend' });
+    console.error('Error sending friend request:', error);
+    res.status(500).json({ error: 'Error sending friend request' });
+  }
+});
+
+// Accept friend request
+app.put('/api/friends/requests/:requestId/accept', authenticateToken, async (req, res) => {
+  try {
+    const friendship = await Friendship.findOne({
+      _id: req.params.requestId,
+      friendId: req.user.id, // Only the recipient can accept
+      status: 'pending'
+    }).populate('userId', 'username email');
+
+    if (!friendship) {
+      return res.status(404).json({ error: 'Friend request not found' });
+    }
+
+    friendship.status = 'accepted';
+    await friendship.save();
+
+    res.json({
+      id: friendship.userId._id.toString(),
+      username: friendship.userId.username,
+      email: friendship.userId.email,
+      friendshipId: friendship._id.toString(),
+      message: 'Friend request accepted'
+    });
+  } catch (error) {
+    console.error('Error accepting friend request:', error);
+    res.status(500).json({ error: 'Error accepting friend request' });
+  }
+});
+
+// Reject or cancel friend request
+app.delete('/api/friends/requests/:requestId', authenticateToken, async (req, res) => {
+  try {
+    const friendship = await Friendship.findOne({
+      _id: req.params.requestId,
+      status: 'pending',
+      $or: [
+        { userId: req.user.id }, // Can cancel sent request
+        { friendId: req.user.id } // Can reject received request
+      ]
+    });
+
+    if (!friendship) {
+      return res.status(404).json({ error: 'Friend request not found' });
+    }
+
+    await Friendship.deleteOne({ _id: req.params.requestId });
+
+    res.json({ message: 'Friend request removed' });
+  } catch (error) {
+    console.error('Error removing friend request:', error);
+    res.status(500).json({ error: 'Error removing friend request' });
   }
 });
 
@@ -443,17 +553,18 @@ app.delete('/api/friends/:friendshipId', authenticateToken, async (req, res) => 
   }
 });
 
-// Social Feed Routes
+// Social Feed Routes - Only show accepted friends' workouts
 app.get('/api/feed', authenticateToken, async (req, res) => {
   try {
     const friendships = await Friendship.find({
+      status: 'accepted',
       $or: [
         { userId: req.user.id },
         { friendId: req.user.id }
       ]
     });
 
-    const friendIds = new Set([req.user.id]);
+    const friendIds = new Set([req.user.id]); // Include own workouts
     friendships.forEach(f => {
       if (f.userId.toString() === req.user.id) {
         friendIds.add(f.friendId.toString());
@@ -498,12 +609,13 @@ app.get('/api/feed', authenticateToken, async (req, res) => {
   }
 });
 
-// Leaderboard Route
+// Leaderboard Route - Only show accepted friends
 app.get('/api/leaderboard', authenticateToken, async (req, res) => {
   try {
     const { period = 'week' } = req.query;
 
     const friendships = await Friendship.find({
+      status: 'accepted',
       $or: [
         { userId: req.user.id },
         { friendId: req.user.id }
