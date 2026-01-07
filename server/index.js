@@ -26,7 +26,7 @@ function toObjectId(id) {
   }
   // Check if it's already a valid ObjectId string (24 hex characters)
   if (mongoose.Types.ObjectId.isValid(id)) {
-    return mongoose.Types.ObjectId(id);
+    return new mongoose.Types.ObjectId(id);
   }
   return null;
 }
@@ -419,7 +419,7 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
       }
     });
 
-    const excludedObjectIds = Array.from(excludedIds).filter(id => mongoose.Types.ObjectId.isValid(id)).map(id => mongoose.Types.ObjectId(id));
+    const excludedObjectIds = Array.from(excludedIds).filter(id => mongoose.Types.ObjectId.isValid(id)).map(id => new mongoose.Types.ObjectId(id));
     const currentUserId = req.user._id;
 
     const searchQuery = {
@@ -677,7 +677,7 @@ app.get('/api/feed', authenticateToken, async (req, res) => {
     });
 
     const workouts = await Workout.find({
-      userId: { $in: Array.from(friendIds).map(id => mongoose.Types.ObjectId(id)) }
+      userId: { $in: Array.from(friendIds).map(id => new mongoose.Types.ObjectId(id)) }
     })
       .populate('userId', 'username')
       .sort({ date: -1, createdAt: -1 })
@@ -742,7 +742,7 @@ app.get('/api/leaderboard', authenticateToken, async (req, res) => {
       cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    const userIds = Array.from(friendIds).map(id => mongoose.Types.ObjectId(id));
+    const userIds = Array.from(friendIds).map(id => new mongoose.Types.ObjectId(id));
     const users = await User.find({ _id: { $in: userIds } });
 
     const leaderboard = await Promise.all(users.map(async (user) => {
