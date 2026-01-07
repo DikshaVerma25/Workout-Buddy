@@ -21,10 +21,19 @@ function Dashboard() {
 
   const fetchWorkouts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/workouts`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/workouts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setWorkouts(response.data);
     } catch (error) {
       console.error('Error fetching workouts:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+      }
     } finally {
       setLoading(false);
     }
@@ -32,18 +41,44 @@ function Dashboard() {
 
   const handleAddWorkout = async (workoutData) => {
     try {
-      const response = await axios.post(`${API_URL}/workouts`, workoutData);
+      const token = localStorage.getItem('token');
+      console.log('Adding workout with data:', workoutData);
+      console.log('Using token:', token ? 'Token exists' : 'No token');
+      
+      const response = await axios.post(`${API_URL}/workouts`, workoutData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Workout added successfully:', response.data);
       setWorkouts([response.data, ...workouts]);
       setShowForm(false);
     } catch (error) {
-      console.error('Error adding workout:', error);
+      console.error('=== ERROR ADDING WORKOUT ===');
+      console.error('Error object:', error);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      console.error('Error message:', error.message);
+      
+      if (error.response) {
+        console.error('Full error details:', JSON.stringify(error.response.data, null, 2));
+      }
+      
       throw error;
     }
   };
 
   const handleDeleteWorkout = async (id) => {
     try {
-      await axios.delete(`${API_URL}/workouts/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/workouts/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setWorkouts(workouts.filter(w => w.id !== id));
     } catch (error) {
       console.error('Error deleting workout:', error);
