@@ -320,7 +320,15 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
 
     // Format response for frontend
     // Format date as YYYY-MM-DD string for consistency
-    const dateStr = newWorkout.date.toISOString().split('T')[0];
+    let dateStr;
+    if (newWorkout.date instanceof Date) {
+      dateStr = newWorkout.date.toISOString().split('T')[0];
+    } else if (typeof newWorkout.date === 'string') {
+      dateStr = newWorkout.date.split('T')[0];
+    } else {
+      // Fallback: use the original date string from request
+      dateStr = date.split('T')[0];
+    }
     
     const formattedWorkout = {
       id: newWorkout._id.toString(),
@@ -333,9 +341,11 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
       duration: newWorkout.duration,
       durationUnit: newWorkout.durationUnit,
       date: dateStr,
-      notes: newWorkout.notes,
+      notes: newWorkout.notes || '',
       createdAt: newWorkout.createdAt
     };
+    
+    console.log('Formatted workout response:', JSON.stringify(formattedWorkout, null, 2));
 
     res.status(201).json(formattedWorkout);
   } catch (error) {
@@ -357,7 +367,8 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
     
     res.status(500).json({ 
       error: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: error.message, // Include error message for debugging
+      errorName: error.name
     });
   }
 });
