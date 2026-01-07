@@ -12,8 +12,14 @@ function WorkoutCalendar({ workouts, onDateClick }) {
   const daysInMonth = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   
   // Create a set of dates that have workouts
+  // workout.date is already a YYYY-MM-DD string
   const workoutDates = new Set(
     workouts.map(w => {
+      // If date is already a string in YYYY-MM-DD format, use it directly
+      if (typeof w.date === 'string' && w.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return w.date;
+      }
+      // Otherwise, parse it as a Date and format it
       const date = new Date(w.date);
       return format(date, 'yyyy-MM-dd');
     })

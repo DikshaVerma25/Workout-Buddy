@@ -227,6 +227,7 @@ app.get('/api/workouts', authenticateToken, async (req, res) => {
       .sort({ date: -1, createdAt: -1 });
     
     // Convert to format expected by frontend
+    // Ensure date is returned as YYYY-MM-DD string
     const formattedWorkouts = workouts.map(w => ({
       id: w._id.toString(),
       userId: w.userId.toString(),
@@ -237,7 +238,7 @@ app.get('/api/workouts', authenticateToken, async (req, res) => {
       weight: w.weight,
       duration: w.duration,
       durationUnit: w.durationUnit,
-      date: w.date,
+      date: typeof w.date === 'string' ? w.date : w.date.toISOString().split('T')[0],
       notes: w.notes,
       createdAt: w.createdAt
     }));
@@ -277,19 +278,28 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
 
     const workoutType = type || 'strength training';
 
-    // Parse date safely - handle YYYY-MM-DD format
-    let workoutDate;
+    // Validate and normalize date to YYYY-MM-DD format
+    let workoutDateStr;
     if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      // Date is in YYYY-MM-DD format, parse it to avoid timezone issues
-      const [year, month, day] = date.split('-').map(Number);
-      workoutDate = new Date(year, month - 1, day);
+      // Date is already in YYYY-MM-DD format
+      workoutDateStr = date;
     } else {
-      workoutDate = new Date(date);
+      // Try to parse and format as YYYY-MM-DD
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) {
+        console.error('Validation error: Invalid date format', date);
+        return res.status(400).json({ error: 'Invalid date format' });
+      }
+      // Format as YYYY-MM-DD (local date, not UTC)
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      workoutDateStr = `${year}-${month}-${day}`;
     }
 
-    // Validate date
-    if (isNaN(workoutDate.getTime())) {
-      console.error('Validation error: Invalid date format', date);
+    // Validate date string format
+    if (!workoutDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      console.error('Validation error: Invalid date format', workoutDateStr);
       return res.status(400).json({ error: 'Invalid date format' });
     }
 
@@ -297,7 +307,7 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
       userId: req.user._id,
       exercise: exercise.trim(),
       type: workoutType,
-      date: workoutDate,
+      date: workoutDateStr,
       duration,
       durationUnit
     });
@@ -311,7 +321,7 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
       weight: weight ? parseFloat(weight) : null,
       duration: duration ? parseFloat(duration) : null,
       durationUnit: duration ? (durationUnit || 'minutes') : null,
-      date: workoutDate,
+      date: workoutDateStr, // Store as string to avoid timezone issues
       notes: notes || ''
     });
 
@@ -319,16 +329,8 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
     console.log('Workout saved successfully:', newWorkout._id);
 
     // Format response for frontend
-    // Format date as YYYY-MM-DD string for consistency
-    let dateStr;
-    if (newWorkout.date instanceof Date) {
-      dateStr = newWorkout.date.toISOString().split('T')[0];
-    } else if (typeof newWorkout.date === 'string') {
-      dateStr = newWorkout.date.split('T')[0];
-    } else {
-      // Fallback: use the original date string from request
-      dateStr = date.split('T')[0];
-    }
+    // Date is already stored as YYYY-MM-DD string
+    const dateStr = newWorkout.date;
     
     const formattedWorkout = {
       id: newWorkout._id.toString(),
@@ -710,7 +712,7 @@ app.get('/api/feed', authenticateToken, async (req, res) => {
         weight: w.weight,
         duration: w.duration,
         durationUnit: w.durationUnit,
-        date: w.date,
+        date: typeof w.date === 'string' ? w.date : w.date.toISOString().split('T')[0],
         notes: w.notes,
         createdAt: w.createdAt
       },
@@ -764,7 +766,9 @@ app.get('/api/leaderboard', authenticateToken, async (req, res) => {
     const leaderboard = await Promise.all(users.map(async (user) => {
       const workoutQuery = { userId: user._id };
       if (period !== 'all') {
-        workoutQuery.date = { $gte: cutoffDate };
+        // Convert cutoffDate to YYYY-MM-DD string for comparison
+        const cutoffDateStr = cutoffDate.toISOString().split('T')[0];
+        workoutQuery.date = { $gte: cutoffDateStr };
       }
 
       const userWorkouts = await Workout.find(workoutQuery);

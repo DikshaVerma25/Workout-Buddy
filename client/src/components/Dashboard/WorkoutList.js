@@ -15,8 +15,9 @@ function WorkoutList({ workouts, onDelete }) {
   }
 
   // Group workouts by date
+  // workout.date is already a YYYY-MM-DD string, so use it directly
   const groupedWorkouts = workouts.reduce((acc, workout) => {
-    const date = format(new Date(workout.date), 'yyyy-MM-dd');
+    const date = typeof workout.date === 'string' ? workout.date : format(new Date(workout.date), 'yyyy-MM-dd');
     if (!acc[date]) {
       acc[date] = [];
     }

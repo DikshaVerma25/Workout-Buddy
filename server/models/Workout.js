@@ -37,8 +37,9 @@ const workoutSchema = new mongoose.Schema({
     default: null // 'minutes' or 'hours'
   },
   date: {
-    type: Date,
-    required: true
+    type: String,
+    required: true,
+    match: /^\d{4}-\d{2}-\d{2}$/ // YYYY-MM-DD format
   },
   notes: {
     type: String,
