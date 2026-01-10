@@ -133,28 +133,6 @@ function WorkoutCalendar({ workouts, onDateClick, selectedDate }) {
           );
         })}
       </div>
-      <div className="calendar-legend">
-        <div className="legend-item">
-          <span className="legend-dot today">●</span>
-          <span>Today</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('strength training') }}>●</span>
-          <span>Strength</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('cardio') }}>●</span>
-          <span>Cardio</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('yoga') }}>●</span>
-          <span>Yoga</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('biking') }}>●</span>
-          <span>Bike</span>
-        </div>
-      </div>
     </div>
   );
 }
