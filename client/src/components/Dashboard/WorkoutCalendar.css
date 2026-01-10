@@ -36,17 +36,18 @@
 }
 
 .calendar-day {
-  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border-radius: 6px;
   position: relative;
   transition: all 0.2s ease;
-  background: #f8f9fa;
-  border: 1.5px solid transparent;
-  min-height: 32px;
+  background: #fff;
+  border: 1.5px solid #e0e0e0;
+  min-height: 75px;
+  padding: 4px 2px 2px 2px;
+  overflow: hidden;
 }
 
 .calendar-day.clickable {
@@ -54,13 +55,17 @@
 }
 
 .calendar-day.clickable:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  filter: brightness(1.1);
+  background: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.calendar-day.clickable:not(.has-workout):hover {
-  background: #e9ecef;
+.calendar-day.clickable.has-workout:hover {
+  background: #fff;
+}
+
+.calendar-day.clickable.selected:hover {
+  background: #f8f9ff;
 }
 
 .calendar-day.other-month {
@@ -80,72 +85,85 @@
 }
 
 .calendar-day.has-workout {
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: #fff;
 }
 
 .calendar-day.has-workout.today {
-  border-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transform: scale(1.05);
+  border-color: #667eea;
+  background: #f0f4ff;
 }
 
 .calendar-day.selected {
-  border: 3px solid #333;
-  box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3);
-  transform: scale(1.08);
+  border: 2px solid #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 10;
+  background: #fff;
 }
 
-.calendar-day.has-workout.selected {
-  border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.4);
+.calendar-day.selected.today {
+  background: #f0f4ff;
 }
 
 .day-number {
   font-size: 0.85rem;
   font-weight: 600;
-  z-index: 1;
+  color: #333;
+  margin-bottom: auto;
+  padding-top: 2px;
 }
 
-.workout-indicators {
+.calendar-day.today .day-number {
+  color: #667eea;
+  font-weight: 700;
+}
+
+.calendar-day.other-month .day-number {
+  color: #999;
+}
+
+.workout-strips {
   position: absolute;
   bottom: 2px;
+  left: 2px;
   right: 2px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 2px;
+  max-height: calc(100% - 20px);
+  overflow: hidden;
+  align-items: stretch;
 }
 
-.workout-count {
-  background: rgba(0, 0, 0, 0.3);
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 4px;
-  border-radius: 8px;
-  min-width: 16px;
-  text-align: center;
-  backdrop-filter: blur(4px);
-}
-
-.workout-type-badge {
-  background: rgba(0, 0, 0, 0.3);
+.workout-strip {
+  width: 100%;
+  height: 14px;
+  border-radius: 2px;
   color: white;
   font-size: 0.6rem;
-  font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 4px;
-  backdrop-filter: blur(4px);
-  letter-spacing: 0.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: capitalize;
+  letter-spacing: 0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  line-height: 1;
+}
+
+.workout-strip-more {
+  background: #666 !important;
+  font-size: 0.55rem;
 }
 
 .calendar-legend {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid #e0e0e0;
   font-size: 0.75rem;
@@ -159,16 +177,16 @@
 }
 
 .legend-dot {
-  font-size: 0.75rem;
-}
-
-.legend-dot.has-workout {
-  color: #667eea;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .legend-dot.today {
-  color: #667eea;
-  font-weight: 600;
+  background: #667eea;
+  border-radius: 50%;
 }
 
 @media (max-width: 768px) {

@@ -2,23 +2,23 @@ import React from 'react';
 import { startOfMonth, endOfMonth, eachDayOfInterval, format, isSameDay, isToday, startOfWeek, endOfWeek } from 'date-fns';
 import './WorkoutCalendar.css';
 
-// Color mapping for different workout types
+// Color mapping for different workout types - Subtle pastel colors
 export const getWorkoutTypeColor = (type) => {
   const colors = {
-    'strength training': '#667eea', // Purple
-    'cardio': '#f093fb', // Pink
-    'biking': '#4facfe', // Blue
-    'yoga': '#43e97b', // Green
-    'pilates': '#fa709a', // Rose
-    'zumba': '#fee140', // Yellow
-    'hiit': '#ff6b6b', // Red
-    'crossfit': '#feca57', // Orange
-    'light walk': '#a8edea', // Cyan
-    'sports and activities': '#ff9a9e', // Coral
-    'breath work': '#c471f5', // Lavender
-    'other': '#96fbc4' // Mint
+    'strength training': '#7c7cff', // Soft purple
+    'cardio': '#ff7c9f', // Soft pink
+    'biking': '#5eb3ff', // Soft blue
+    'yoga': '#4dd4a0', // Soft green
+    'pilates': '#ff8fb3', // Soft rose
+    'zumba': '#ffb84d', // Soft yellow
+    'hiit': '#ff6b6b', // Soft red
+    'crossfit': '#ffa366', // Soft orange
+    'light walk': '#5ee0d0', // Soft cyan
+    'sports and activities': '#ff9e9e', // Soft coral
+    'breath work': '#b380ff', // Soft lavender
+    'other': '#7dd3b8' // Soft mint
   };
-  return colors[type] || '#667eea';
+  return colors[type] || '#7c7cff';
 };
 
 function WorkoutCalendar({ workouts, onDateClick, selectedDate }) {
@@ -78,21 +78,29 @@ function WorkoutCalendar({ workouts, onDateClick, selectedDate }) {
           const isCurrentMonthDay = isCurrentMonth(day);
           const isSelected = selectedDate === dayKey;
           
-          // Get primary workout type color (use first workout's type, or blend colors if multiple)
-          let dayColor = null;
-          if (hasWorkout) {
-            if (dayWorkouts.length === 1) {
-              dayColor = getWorkoutTypeColor(dayWorkouts[0].type);
-            } else {
-              // Multiple workouts - use gradient or first workout's color
-              dayColor = getWorkoutTypeColor(dayWorkouts[0].type);
-            }
-          }
-          
           const handleClick = () => {
             if (isCurrentMonthDay && onDateClick) {
               onDateClick(dayKey, dayWorkouts);
             }
+          };
+
+          // Get workout type label
+          const getWorkoutLabel = (type) => {
+            const labels = {
+              'strength training': 'Strength',
+              'cardio': 'Cardio',
+              'biking': 'Bike',
+              'yoga': 'Yoga',
+              'pilates': 'Pilates',
+              'zumba': 'Zumba',
+              'hiit': 'HIIT',
+              'crossfit': 'CrossFit',
+              'light walk': 'Walk',
+              'sports and activities': 'Sports',
+              'breath work': 'Breath',
+              'other': 'Other'
+            };
+            return labels[type] || type;
           };
 
           return (
@@ -100,16 +108,24 @@ function WorkoutCalendar({ workouts, onDateClick, selectedDate }) {
               key={index}
               className={`calendar-day ${hasWorkout ? 'has-workout' : ''} ${isTodayDate ? 'today' : ''} ${isSelected ? 'selected' : ''} ${!isCurrentMonthDay ? 'other-month' : ''} ${isCurrentMonthDay ? 'clickable' : ''}`}
               onClick={handleClick}
-              style={dayColor ? { background: dayColor, color: 'white' } : {}}
             >
               <span className="day-number">{format(day, 'd')}</span>
               {hasWorkout && (
-                <div className="workout-indicators">
-                  {dayWorkouts.length > 1 && (
-                    <span className="workout-count">{dayWorkouts.length}</span>
-                  )}
-                  {dayWorkouts.length === 1 && (
-                    <span className="workout-type-badge">{dayWorkouts[0].type.charAt(0).toUpperCase()}</span>
+                <div className="workout-strips">
+                  {dayWorkouts.slice(0, 3).map((workout, idx) => (
+                    <div
+                      key={idx}
+                      className="workout-strip"
+                      style={{ backgroundColor: getWorkoutTypeColor(workout.type) }}
+                      title={workout.exercise}
+                    >
+                      {getWorkoutLabel(workout.type)}
+                    </div>
+                  ))}
+                  {dayWorkouts.length > 3 && (
+                    <div className="workout-strip workout-strip-more">
+                      +{dayWorkouts.length - 3}
+                    </div>
                   )}
                 </div>
               )}
@@ -123,16 +139,20 @@ function WorkoutCalendar({ workouts, onDateClick, selectedDate }) {
           <span>Today</span>
         </div>
         <div className="legend-item">
-          <span className="legend-dot" style={{ background: '#667eea' }}>●</span>
+          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('strength training') }}>●</span>
           <span>Strength</span>
         </div>
         <div className="legend-item">
-          <span className="legend-dot" style={{ background: '#f093fb' }}>●</span>
+          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('cardio') }}>●</span>
           <span>Cardio</span>
         </div>
         <div className="legend-item">
-          <span className="legend-dot" style={{ background: '#43e97b' }}>●</span>
+          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('yoga') }}>●</span>
           <span>Yoga</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-dot" style={{ backgroundColor: getWorkoutTypeColor('biking') }}>●</span>
+          <span>Bike</span>
         </div>
       </div>
     </div>
