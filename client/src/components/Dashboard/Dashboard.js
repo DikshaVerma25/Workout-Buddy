@@ -62,6 +62,10 @@ function Dashboard() {
       // Update selected date workouts if the new workout is for the selected date
       if (selectedDate && response.data.date === selectedDate) {
         setSelectedDateWorkouts([response.data, ...selectedDateWorkouts]);
+      } else if (!selectedDate) {
+        // If no date was selected, select the date of the newly added workout
+        setSelectedDate(response.data.date);
+        setSelectedDateWorkouts([response.data]);
       }
       
       setShowForm(false);
@@ -350,17 +354,18 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Show form when adding workout (either via button or clicking empty date) */}
+        {/* Show form when adding workout */}
         {!loading && showForm && (
           <div className="card">
             <WorkoutForm 
-              onSubmit={handleAddWorkout} 
-              initialDate={selectedDate}
+              onSubmit={handleAddWorkout}
+              initialDate={selectedDate || null}
               onClose={() => {
                 setShowForm(false);
                 // Don't clear selectedDate if there are workouts on that date
-                if (selectedDateWorkouts.length === 0) {
+                if (!selectedDate || selectedDateWorkouts.length === 0) {
                   setSelectedDate(null);
+                  setSelectedDateWorkouts([]);
                 }
               }}
             />
