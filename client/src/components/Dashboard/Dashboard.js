@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { format, isToday } from 'date-fns';
 import Navbar from '../Layout/Navbar';
 import WorkoutForm from './WorkoutForm';
 import WorkoutList from './WorkoutList';
-import WorkoutCalendar from './WorkoutCalendar';
+import WorkoutCalendar, { getWorkoutTypeColor } from './WorkoutCalendar';
 import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -12,8 +13,8 @@ function Dashboard() {
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [showWorkoutList, setShowWorkoutList] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
 
   useEffect(() => {
     fetchWorkouts();
@@ -53,7 +54,16 @@ function Dashboard() {
       });
       
       console.log('Workout added successfully:', response.data);
-      setWorkouts([response.data, ...workouts]);
+      
+      // Update workouts list
+      const updatedWorkouts = [response.data, ...workouts];
+      setWorkouts(updatedWorkouts);
+      
+      // Update selected date workouts if the new workout is for the selected date
+      if (selectedDate && response.data.date === selectedDate) {
+        setSelectedDateWorkouts([response.data, ...selectedDateWorkouts]);
+      }
+      
       setShowForm(false);
     } catch (error) {
       console.error('=== ERROR ADDING WORKOUT ===');
@@ -79,7 +89,24 @@ function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
-      setWorkouts(workouts.filter(w => w.id !== id));
+      
+      // Update workouts list
+      const updatedWorkouts = workouts.filter(w => w.id !== id);
+      setWorkouts(updatedWorkouts);
+      
+      // Update selected date workouts if workout was deleted from selected date
+      if (selectedDate) {
+        const deletedWorkout = workouts.find(w => w.id === id);
+        if (deletedWorkout && deletedWorkout.date === selectedDate) {
+          const updatedSelectedWorkouts = selectedDateWorkouts.filter(w => w.id !== id);
+          setSelectedDateWorkouts(updatedSelectedWorkouts);
+          
+          // If no more workouts on this date, clear selection
+          if (updatedSelectedWorkouts.length === 0) {
+            setSelectedDate(null);
+          }
+        }
+      }
     } catch (error) {
       console.error('Error deleting workout:', error);
     }
@@ -166,7 +193,17 @@ function Dashboard() {
           </div>
           <button
             className="btn btn-primary"
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (showForm) {
+                setShowForm(false);
+                setSelectedDate(null);
+                setSelectedDateWorkouts([]);
+              } else {
+                setShowForm(true);
+                setSelectedDate(null);
+                setSelectedDateWorkouts([]);
+              }
+            }}
           >
             {showForm ? '❌ Cancel' : '✨ Log Workout'}
           </button>
@@ -219,28 +256,114 @@ function Dashboard() {
         {!loading && (
           <WorkoutCalendar 
             workouts={workouts} 
-            onDateClick={(date) => {
+            selectedDate={selectedDate}
+            onDateClick={(date, dayWorkouts) => {
               setSelectedDate(date);
-              setShowForm(true);
+              setSelectedDateWorkouts(dayWorkouts || []);
+              // Close form if clicking on a date with workouts
+              if (dayWorkouts.length > 0) {
+                setShowForm(false);
+              } else {
+                // No workouts on this date, open form to add one
+                setShowForm(true);
+              }
             }}
           />
         )}
 
-        {/* Workout Logs Toggle */}
-        {!loading && workouts.length > 0 && (
-          <div className="workout-logs-section">
+        {/* Selected Date Details */}
+        {!loading && selectedDate && selectedDateWorkouts.length > 0 && (
+          <div className="card selected-date-details">
+            <div className="selected-date-header">
+              <h3>
+                {(() => {
+                  const [year, month, day] = selectedDate.split('-').map(Number);
+                  const dateObj = new Date(year, month - 1, day);
+                  const isTodayDate = isToday(dateObj);
+                  return (
+                    <>
+                      {isTodayDate && <span className="today-badge">Today</span>}
+                      {format(dateObj, 'EEEE, MMMM d, yyyy')}
+                    </>
+                  );
+                })()}
+              </h3>
+              <button
+                className="btn-icon"
+                onClick={() => {
+                  setSelectedDate(null);
+                  setSelectedDateWorkouts([]);
+                }}
+                title="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="selected-date-workouts">
+              {selectedDateWorkouts.map(workout => (
+                <div key={workout.id} className="workout-detail-card">
+                  <div className="workout-detail-header">
+                    <h4>{workout.exercise}</h4>
+                    <button
+                      className="btn-delete-small"
+                      onClick={() => {
+                        handleDeleteWorkout(workout.id);
+                        setSelectedDateWorkouts(selectedDateWorkouts.filter(w => w.id !== workout.id));
+                      }}
+                      title="Delete workout"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="workout-detail-type" style={{ color: getWorkoutTypeColor(workout.type) }}>
+                    {workout.type}
+                  </div>
+                  {workout.duration && (
+                    <div className="workout-detail-info">
+                      <span>Duration: </span>
+                      {workout.duration >= 60
+                        ? `${Math.floor(workout.duration / 60)}h ${workout.duration % 60}m`
+                        : `${workout.duration}m`
+                      }
+                    </div>
+                  )}
+                  {workout.notes && (
+                    <div className="workout-detail-notes">
+                      <strong>Notes:</strong> {workout.notes}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
             <button
-              className="workout-logs-toggle"
-              onClick={() => setShowWorkoutList(!showWorkoutList)}
+              className="btn btn-primary btn-block"
+              onClick={() => {
+                setShowForm(true);
+              }}
             >
-              <span className="toggle-icon">{showWorkoutList ? '▼' : '▶'}</span>
-              <span className="toggle-text">Workout Logs ({workouts.length})</span>
+              + Add Another Workout to {(() => {
+                const [year, month, day] = selectedDate.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                return format(dateObj, 'MMM d');
+              })()}
             </button>
-            {showWorkoutList && (
-              <div className="workout-logs-content">
-                <WorkoutList workouts={workouts} onDelete={handleDeleteWorkout} />
-              </div>
-            )}
+          </div>
+        )}
+
+        {/* Show form when adding workout (either via button or clicking empty date) */}
+        {!loading && showForm && (
+          <div className="card">
+            <WorkoutForm 
+              onSubmit={handleAddWorkout} 
+              initialDate={selectedDate}
+              onClose={() => {
+                setShowForm(false);
+                // Don't clear selectedDate if there are workouts on that date
+                if (selectedDateWorkouts.length === 0) {
+                  setSelectedDate(null);
+                }
+              }}
+            />
           </div>
         )}
 

@@ -54,9 +54,13 @@
 }
 
 .calendar-day.clickable:hover {
-  background: #e9ecef;
   transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.1);
+}
+
+.calendar-day.clickable:not(.has-workout):hover {
+  background: #e9ecef;
 }
 
 .calendar-day.other-month {
@@ -64,39 +68,78 @@
   background: #f0f0f0;
 }
 
-.calendar-day.today {
+.calendar-day.today:not(.has-workout) {
   border-color: #667eea;
   background: #f0f4ff;
   font-weight: 600;
 }
 
+.calendar-day.today.has-workout {
+  border-color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+}
+
 .calendar-day.has-workout {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .calendar-day.has-workout.today {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #5568d3;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
+
+.calendar-day.selected {
+  border: 3px solid #333;
+  box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.08);
+  z-index: 10;
+}
+
+.calendar-day.has-workout.selected {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .day-number {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   z-index: 1;
 }
 
-.workout-dot {
+.workout-indicators {
   position: absolute;
-  bottom: 4px;
-  font-size: 0.5rem;
-  opacity: 0.8;
+  bottom: 2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.calendar-day.has-workout .workout-dot {
-  color: rgba(255, 255, 255, 0.9);
+.workout-count {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+
+.workout-type-badge {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.5px;
 }
 
 .calendar-legend {
