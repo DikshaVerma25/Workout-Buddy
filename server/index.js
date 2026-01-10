@@ -228,20 +228,39 @@ app.get('/api/workouts', authenticateToken, async (req, res) => {
     
     // Convert to format expected by frontend
     // Ensure date is returned as YYYY-MM-DD string
-    const formattedWorkouts = workouts.map(w => ({
-      id: w._id.toString(),
-      userId: w.userId.toString(),
-      exercise: w.exercise,
-      type: w.type,
-      sets: w.sets,
-      reps: w.reps,
-      weight: w.weight,
-      duration: w.duration,
-      durationUnit: w.durationUnit,
-      date: typeof w.date === 'string' ? w.date : w.date.toISOString().split('T')[0],
-      notes: w.notes,
-      createdAt: w.createdAt
-    }));
+    const formattedWorkouts = workouts.map(w => {
+      let dateStr;
+      if (typeof w.date === 'string' && w.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // Already a YYYY-MM-DD string - use directly
+        dateStr = w.date;
+      } else if (w.date instanceof Date) {
+        // It's a Date object - parse as local date (not UTC) to avoid timezone shifts
+        // Use the original date parts, not UTC conversion
+        const year = w.date.getFullYear();
+        const month = String(w.date.getMonth() + 1).padStart(2, '0');
+        const day = String(w.date.getDate()).padStart(2, '0');
+        dateStr = `${year}-${month}-${day}`;
+      } else {
+        // Fallback: try to extract YYYY-MM-DD from string
+        const match = String(w.date).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        dateStr = match ? match[0] : new Date().toISOString().split('T')[0];
+      }
+      
+      return {
+        id: w._id.toString(),
+        userId: w.userId.toString(),
+        exercise: w.exercise,
+        type: w.type,
+        sets: w.sets,
+        reps: w.reps,
+        weight: w.weight,
+        duration: w.duration,
+        durationUnit: w.durationUnit,
+        date: dateStr,
+        notes: w.notes,
+        createdAt: w.createdAt
+      };
+    });
 
     res.json(formattedWorkouts);
   } catch (error) {
@@ -279,28 +298,42 @@ app.post('/api/workouts', authenticateToken, async (req, res) => {
     const workoutType = type || 'strength training';
 
     // Validate and normalize date to YYYY-MM-DD format
+    // IMPORTANT: Never use new Date() on YYYY-MM-DD strings as it causes timezone issues
     let workoutDateStr;
     if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      // Date is already in YYYY-MM-DD format
+      // Date is already in YYYY-MM-DD format - use it directly
       workoutDateStr = date;
+      console.log('Using date string directly:', workoutDateStr);
+    } else if (typeof date === 'string') {
+      // Try to extract YYYY-MM-DD from ISO string or other formats
+      // Match YYYY-MM-DD pattern from the string
+      const dateMatch = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (dateMatch) {
+        workoutDateStr = dateMatch[0]; // Extract YYYY-MM-DD part
+        console.log('Extracted date from string:', workoutDateStr);
+      } else {
+        console.error('Validation error: Cannot parse date format', date);
+        return res.status(400).json({ error: 'Invalid date format. Expected YYYY-MM-DD' });
+      }
     } else {
-      // Try to parse and format as YYYY-MM-DD
+      // If it's a Date object, format it as YYYY-MM-DD using UTC to avoid timezone shifts
       const dateObj = new Date(date);
       if (isNaN(dateObj.getTime())) {
         console.error('Validation error: Invalid date format', date);
         return res.status(400).json({ error: 'Invalid date format' });
       }
-      // Format as YYYY-MM-DD (local date, not UTC)
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
+      // Use UTC methods to avoid timezone conversion issues
+      const year = dateObj.getUTCFullYear();
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getUTCDate()).padStart(2, '0');
       workoutDateStr = `${year}-${month}-${day}`;
+      console.log('Formatted date from Date object:', workoutDateStr);
     }
 
     // Validate date string format
-    if (!workoutDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    if (!workoutDateStr || !workoutDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
       console.error('Validation error: Invalid date format', workoutDateStr);
-      return res.status(400).json({ error: 'Invalid date format' });
+      return res.status(400).json({ error: 'Invalid date format. Expected YYYY-MM-DD' });
     }
 
     console.log('Creating workout with:', {
