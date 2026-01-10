@@ -66,7 +66,10 @@ function WorkoutList({ workouts, onDelete }) {
   return (
     <div>
       {sortedDates.map(date => {
-        const dateObj = new Date(date);
+        // Parse YYYY-MM-DD string directly to avoid timezone issues
+        // date is already a YYYY-MM-DD string, parse it as local date
+        const [year, month, day] = date.split('-').map(Number);
+        const dateObj = new Date(year, month - 1, day);
         const isTodayDate = isToday(dateObj);
         
         return (
