@@ -78,8 +78,12 @@ function WorkoutCalendar({ workouts, onDateClick, selectedDate }) {
           const isCurrentMonthDay = isCurrentMonth(day);
           const isSelected = selectedDate === dayKey;
           
+          // Allow clicking on previous months and current month, but not future dates
+          const isFutureDate = day > today;
+          const isClickable = !isFutureDate;
+          
           const handleClick = () => {
-            if (isCurrentMonthDay && onDateClick) {
+            if (isClickable && onDateClick) {
               onDateClick(dayKey, dayWorkouts);
             }
           };
@@ -106,7 +110,7 @@ function WorkoutCalendar({ workouts, onDateClick, selectedDate }) {
           return (
             <div
               key={index}
-              className={`calendar-day ${hasWorkout ? 'has-workout' : ''} ${isTodayDate ? 'today' : ''} ${isSelected ? 'selected' : ''} ${!isCurrentMonthDay ? 'other-month' : ''} ${isCurrentMonthDay ? 'clickable' : ''}`}
+              className={`calendar-day ${hasWorkout ? 'has-workout' : ''} ${isTodayDate ? 'today' : ''} ${isSelected ? 'selected' : ''} ${!isCurrentMonthDay ? 'other-month' : ''} ${isClickable ? 'clickable' : 'disabled'} ${isFutureDate ? 'future' : ''}`}
               onClick={handleClick}
             >
               <span className="day-number">{format(day, 'd')}</span>
