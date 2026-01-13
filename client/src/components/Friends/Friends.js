@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../Layout/Navbar';
+import { useAuth } from '../../context/AuthContext';
 import './Friends.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 function Friends() {
+  const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
   const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState({ sent: [], received: [] });
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,9 +19,21 @@ function Friends() {
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
+    // Wait for auth to be ready and user to be available
+    if (authLoading) {
+      return; // Still loading auth, don't fetch yet
+    }
+    
+    if (!user) {
+      setLoading(false);
+      return; // No user, don't fetch
+    }
+    
+    // Reset loading state and fetch data
+    setLoading(true);
     fetchFriends();
     fetchPendingRequests();
-  }, []);
+  }, [authLoading, user, location.pathname]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
