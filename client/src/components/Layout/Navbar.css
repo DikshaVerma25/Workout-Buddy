@@ -1,10 +1,11 @@
 .navbar {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(30, 41, 59, 0.95);
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
   position: sticky;
   top: 0;
   z-index: 1000;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.1);
 }
 
 .navbar-container {
@@ -19,8 +20,12 @@
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #667eea;
+  color: #e2e8f0;
   text-decoration: none;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .navbar-links {
@@ -30,16 +35,16 @@
 }
 
 .navbar-links a {
-  color: #333;
+  color: #cbd5e1;
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
   position: relative;
 }
 
 .navbar-links a:hover,
 .navbar-links a.active {
-  color: #667eea;
+  color: #e2e8f0;
 }
 
 .navbar-links a.active::after {
@@ -49,7 +54,8 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: #667eea;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 2px;
 }
 
 .navbar-user {
@@ -58,27 +64,29 @@
   gap: 1rem;
   margin-left: 1rem;
   padding-left: 1rem;
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid rgba(226, 232, 240, 0.15);
 }
 
 .navbar-user span {
-  color: #666;
+  color: #cbd5e1;
   font-weight: 500;
 }
 
 .btn-logout {
   padding: 0.5rem 1rem;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.875rem;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .btn-logout:hover {
-  background: #c82333;
+  background: rgba(248, 113, 113, 0.25);
+  border-color: rgba(248, 113, 113, 0.4);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
@@ -96,7 +104,7 @@
 
   .navbar-user {
     border-left: none;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid rgba(245, 245, 245, 0.2);
     padding-left: 0;
     padding-top: 1rem;
     margin-left: 0;

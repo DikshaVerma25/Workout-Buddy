@@ -7,25 +7,27 @@
 
 .period-btn {
   padding: 0.75rem 1.5rem;
-  border: 2px solid #e0e0e0;
-  background: white;
+  border: 2px solid rgba(226, 232, 240, 0.15);
+  background: rgba(226, 232, 240, 0.05);
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #666;
+  color: rgba(226, 232, 240, 0.7);
 }
 
 .period-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #6366f1;
+  color: #e2e8f0;
+  background: rgba(99, 102, 241, 0.1);
 }
 
 .period-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
   border-color: transparent;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
 }
 
 .leaderboard {
@@ -39,20 +41,22 @@
   align-items: center;
   gap: 1.5rem;
   padding: 1.5rem;
-  background: #f8f9fa;
+  background: rgba(226, 232, 240, 0.03);
   border-radius: 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
   position: relative;
+  border: 1px solid rgba(226, 232, 240, 0.1);
 }
 
 .leaderboard-item:hover {
   transform: translateX(5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+  background: rgba(226, 232, 240, 0.05);
 }
 
 .leaderboard-item.current-user {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  border: 2px solid #667eea;
+  background: rgba(99, 102, 241, 0.1);
+  border: 2px solid #6366f1;
 }
 
 .leaderboard-rank {
@@ -61,16 +65,30 @@
 }
 
 .rank-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.5rem;
   font-weight: bold;
-  color: #667eea;
+  color: #6366f1;
+}
+
+.rank-number svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.rank-number-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: rgba(226, 232, 240, 0.7);
 }
 
 .leaderboard-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -78,6 +96,7 @@
   font-size: 1.5rem;
   font-weight: bold;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .leaderboard-info {
@@ -87,7 +106,7 @@
 .leaderboard-name {
   font-size: 1.25rem;
   font-weight: bold;
-  color: #333;
+  color: #e2e8f0;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -95,12 +114,13 @@
 }
 
 .you-badge {
-  background: #667eea;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 .leaderboard-stats {
@@ -111,20 +131,22 @@
 
 .stat-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .stat-item .stat-label {
   font-size: 0.75rem;
-  color: #666;
+  color: rgba(226, 232, 240, 0.7);
   text-transform: uppercase;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
 }
 
 .stat-item .stat-value {
   font-size: 1.1rem;
   font-weight: bold;
-  color: #667eea;
+  color: #6366f1;
 }
 
 .leaderboard-medal {

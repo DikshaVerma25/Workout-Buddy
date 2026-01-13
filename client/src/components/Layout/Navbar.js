@@ -30,12 +30,6 @@ function Navbar() {
             Friends
           </Link>
           <Link
-            to="/feed"
-            className={location.pathname === '/feed' ? 'active' : ''}
-          >
-            Feed
-          </Link>
-          <Link
             to="/leaderboard"
             className={location.pathname === '/leaderboard' ? 'active' : ''}
           >

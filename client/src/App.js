@@ -4,7 +4,6 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import Dashboard from './components/Dashboard/Dashboard';
 import Friends from './components/Friends/Friends';
-import Feed from './components/Feed/Feed';
 import Leaderboard from './components/Leaderboard/Leaderboard';
 import Navbar from './components/Layout/Navbar';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -40,14 +39,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Friends />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/feed"
-        element={
-          <ProtectedRoute>
-            <Feed />
           </ProtectedRoute>
         }
       />

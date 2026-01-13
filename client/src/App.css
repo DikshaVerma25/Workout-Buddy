@@ -18,11 +18,17 @@
 }
 
 .card {
-  background: white;
-  border-radius: 12px;
+  background: #1e293b;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(226, 232, 240, 0.1);
   margin-bottom: 1.5rem;
+  border: 1px solid rgba(226, 232, 240, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
 .btn {
@@ -36,22 +42,27 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
 }
 
 .btn-primary:hover {
+  background: linear-gradient(135deg, #7c7ff5 0%, #9d79f8 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
 }
 
 .btn-secondary {
-  background: #6c757d;
-  color: white;
+  background: rgba(226, 232, 240, 0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.2);
 }
 
 .btn-secondary:hover {
-  background: #5a6268;
+  background: rgba(226, 232, 240, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .btn-danger {
@@ -76,7 +87,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #333;
+  color: #e2e8f0;
 }
 
 .form-group input,
@@ -84,17 +95,26 @@
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  background: rgba(226, 232, 240, 0.05);
+  border: 2px solid rgba(226, 232, 240, 0.15);
+  border-radius: 10px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  color: #e2e8f0;
+  transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #6366f1;
+  background: rgba(226, 232, 240, 0.08);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: rgba(226, 232, 240, 0.5);
 }
 
 .form-row {
@@ -104,13 +124,13 @@
 }
 
 .error {
-  color: #dc3545;
+  color: #f87171;
   margin-top: 0.5rem;
   font-size: 0.875rem;
 }
 
 .success {
-  color: #28a745;
+  color: #34d399;
   margin-top: 0.5rem;
   font-size: 0.875rem;
 }

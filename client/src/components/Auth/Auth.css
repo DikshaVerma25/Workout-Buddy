@@ -7,12 +7,13 @@
 }
 
 .auth-card {
-  background: white;
-  border-radius: 16px;
+  background: #1e293b;
+  border-radius: 20px;
   padding: 3rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(226, 232, 240, 0.1);
   width: 100%;
   max-width: 400px;
+  border: 1px solid rgba(226, 232, 240, 0.1);
 }
 
 .auth-card .logo-container {
@@ -21,7 +22,7 @@
 
 .auth-slogan {
   text-align: center;
-  color: #666;
+  color: rgba(226, 232, 240, 0.7);
   font-style: italic;
   font-size: 1rem;
   margin-bottom: 1rem;
@@ -31,7 +32,7 @@
 
 .auth-card h2 {
   text-align: center;
-  color: #333;
+  color: #e2e8f0;
   margin-bottom: 2rem;
   font-size: 1.5rem;
 }
@@ -39,16 +40,18 @@
 .auth-switch {
   text-align: center;
   margin-top: 1.5rem;
-  color: #666;
+  color: rgba(226, 232, 240, 0.7);
 }
 
 .auth-switch a {
-  color: #667eea;
+  color: #6366f1;
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .auth-switch a:hover {
+  color: #8b5cf6;
   text-decoration: underline;
 }
 

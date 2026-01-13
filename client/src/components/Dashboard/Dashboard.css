@@ -3,7 +3,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  color: white;
+  color: #e2e8f0;
 }
 
 .header-content {
@@ -21,7 +21,7 @@
 .slogan {
   font-size: 1.1rem;
   font-style: italic;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(226, 232, 240, 0.7);
   margin: 0;
   font-weight: 300;
   letter-spacing: 0.5px;
@@ -50,14 +50,15 @@
 }
 
 .stat-card {
-  background: white;
+  background: #1e293b;
   border-radius: 16px;
   padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(226, 232, 240, 0.1);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.1);
 }
 
 .stat-card::before {
@@ -66,8 +67,8 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 3px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 }
 
 .stat-card:hover {
@@ -78,18 +79,26 @@
 .stat-icon {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+}
+
+.stat-icon svg {
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 .stat-value {
   font-size: 2.5rem;
   font-weight: bold;
-  color: #667eea;
+  color: #e2e8f0;
   margin-bottom: 0.5rem;
 }
 
 .stat-label {
-  color: #666;
+  color: rgba(226, 232, 240, 0.7);
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -118,40 +127,49 @@
   animation: slideDown 0.3s ease;
 }
 
+.workout-form-card {
+  margin-bottom: 2rem;
+  position: relative;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
+  overflow: hidden;
+  backdrop-filter: blur(2px);
+}
+
 .selected-date-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid rgba(226, 232, 240, 0.15);
 }
 
 .selected-date-header h3 {
   margin: 0;
   font-size: 1.5rem;
-  color: #333;
+  color: #e2e8f0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
 .today-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 .btn-icon {
   background: transparent;
   border: none;
   font-size: 1.5rem;
-  color: #666;
+  color: rgba(226, 232, 240, 0.7);
   cursor: pointer;
   padding: 0.5rem;
   line-height: 1;
@@ -165,8 +183,8 @@
 }
 
 .btn-icon:hover {
-  background: #f0f0f0;
-  color: #333;
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
   transform: rotate(90deg);
 }
 
@@ -177,17 +195,19 @@
 }
 
 .workout-detail-card {
-  background: #f8f9fa;
+  background: rgba(226, 232, 240, 0.03);
   border-radius: 12px;
   padding: 1.25rem;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #6366f1;
   transition: all 0.2s ease;
+  border: 1px solid rgba(226, 232, 240, 0.1);
 }
 
 .workout-detail-card:hover {
-  background: #e9ecef;
+  background: rgba(99, 102, 241, 0.1);
   transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+  border-left-color: #8b5cf6;
 }
 
 .workout-detail-header {
@@ -200,7 +220,7 @@
 .workout-detail-header h4 {
   margin: 0;
   font-size: 1.1rem;
-  color: #333;
+  color: #e2e8f0;
   font-weight: 600;
 }
 
@@ -208,7 +228,7 @@
   background: transparent;
   border: none;
   font-size: 1.25rem;
-  color: #999;
+  color: rgba(226, 232, 240, 0.6);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   line-height: 1;
@@ -217,8 +237,8 @@
 }
 
 .btn-delete-small:hover {
-  background: #ffebee;
-  color: #f44336;
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
   transform: scale(1.1);
 }
 
@@ -228,34 +248,35 @@
   text-transform: capitalize;
   margin-bottom: 0.5rem;
   padding: 0.25rem 0.75rem;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(99, 102, 241, 0.15);
   border-radius: 8px;
   display: inline-block;
+  color: #e2e8f0;
 }
 
 .workout-detail-info {
   font-size: 0.9rem;
-  color: #666;
+  color: rgba(226, 232, 240, 0.7);
   margin-top: 0.5rem;
 }
 
 .workout-detail-info span {
   font-weight: 600;
-  color: #333;
+  color: #e2e8f0;
 }
 
 .workout-detail-notes {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid rgba(226, 232, 240, 0.15);
   font-size: 0.9rem;
-  color: #555;
+  color: rgba(226, 232, 240, 0.8);
   font-style: italic;
 }
 
 .workout-detail-notes strong {
   font-style: normal;
-  color: #333;
+  color: #e2e8f0;
 }
 
 .btn-block {

@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfToday } from 'date-fns';
+import { FiCalendar, FiClock, FiEdit3 } from 'react-icons/fi';
+import {
+  StrengthTrainingIcon,
+  CardioIcon,
+  BikingIcon,
+  YogaIcon,
+  PilatesIcon,
+  ZumbaIcon,
+  HIITIcon,
+  CrossFitIcon,
+  LightWalkIcon,
+  SportsIcon,
+  BreathWorkIcon,
+  OtherIcon
+} from './WorkoutIcons';
+import { YogaBackground } from './YogaBackground';
 import './WorkoutForm.css';
 
 function WorkoutForm({ onSubmit, initialDate, onClose }) {
@@ -21,19 +37,23 @@ function WorkoutForm({ onSubmit, initialDate, onClose }) {
     }
   }, [initialDate]);
 
+  // Yoga background image path (place your image in public/images/yoga-background.jpg)
+  // In React, public folder images are referenced from root path
+  const yogaBgImage = '/images/yoga-background.jpg';
+
   const workoutTypes = [
-    { value: 'strength training', label: 'Strength Training', icon: '💪' },
-    { value: 'cardio', label: 'Cardio', icon: '🏃' },
-    { value: 'biking', label: 'Biking', icon: '🚴' },
-    { value: 'yoga', label: 'Yoga', icon: '🧘' },
-    { value: 'pilates', label: 'Pilates', icon: '🤸' },
-    { value: 'zumba', label: 'Zumba', icon: '💃' },
-    { value: 'hiit', label: 'HIIT', icon: '⚡' },
-    { value: 'crossfit', label: 'CrossFit', icon: '🔥' },
-    { value: 'light walk', label: 'Light Walk', icon: '🚶' },
-    { value: 'sports and activities', label: 'Sports and Activities', icon: '⚽' },
-    { value: 'breath work', label: 'Breath Work', icon: '🌬️' },
-    { value: 'other', label: 'Other', icon: '✨' }
+    { value: 'strength training', label: 'Strength Training', icon: StrengthTrainingIcon },
+    { value: 'cardio', label: 'Cardio', icon: CardioIcon },
+    { value: 'biking', label: 'Biking', icon: BikingIcon },
+    { value: 'yoga', label: 'Yoga', icon: YogaIcon, bgImage: yogaBgImage },
+    { value: 'pilates', label: 'Pilates', icon: PilatesIcon },
+    { value: 'zumba', label: 'Zumba', icon: ZumbaIcon },
+    { value: 'hiit', label: 'HIIT', icon: HIITIcon },
+    { value: 'crossfit', label: 'CrossFit', icon: CrossFitIcon },
+    { value: 'light walk', label: 'Light Walk', icon: LightWalkIcon },
+    { value: 'sports and activities', label: 'Sports and Activities', icon: SportsIcon },
+    { value: 'breath work', label: 'Breath Work', icon: BreathWorkIcon },
+    { value: 'other', label: 'Other', icon: OtherIcon }
   ];
 
   // Duration is optional for all workout types
@@ -194,16 +214,16 @@ function WorkoutForm({ onSubmit, initialDate, onClose }) {
         
         if (!type || type.trim() === '') {
           errorMessage = 'Please select a workout type';
-          console.log('❌ Missing: workout type');
+          console.log('Missing: workout type');
         } else if (type === 'other' && (!otherExercise || !otherExercise.trim())) {
           errorMessage = 'Please specify what workout you did';
-          console.log('❌ Missing: other exercise name');
+          console.log('Missing: other exercise name');
         } else if (!date || date.trim() === '') {
           errorMessage = 'Please select a date';
-          console.log('❌ Missing: date');
+          console.log('Missing: date');
         } else {
           // All checks passed but still got error - this is strange
-          console.log('⚠️ All validation passed but still got error. Original error:', errorMessage);
+          console.log('All validation passed but still got error. Original error:', errorMessage);
           errorMessage = `Server error: ${errorMessage}. Please try again or check the console for details.`;
         }
       }
@@ -272,35 +292,56 @@ function WorkoutForm({ onSubmit, initialDate, onClose }) {
 
   return (
     <div className="workout-form" role="none">
-      
+      <YogaBackground />
       <div className="form-header">
-        <h2>✨ Log Your Workout</h2>
-        <p className="form-subtitle">Track your progress and stay motivated! 🚀</p>
+        <h2>Log Your Workout</h2>
+        <p className="form-subtitle">Track your progress and stay motivated!</p>
       </div>
 
       {/* What did you do? - Combined Exercise and Type */}
       <div className="form-group">
         <label className="form-label">
-          <span className="label-icon">🏋️</span>
+          <span className="label-icon">
+            <StrengthTrainingIcon size={20} />
+          </span>
           What did you do? *
         </label>
         <div className="type-selector">
-          {workoutTypes.map((workoutType) => (
-            <button
-              key={workoutType.value}
-              type="button"
-              className={`type-button ${type === workoutType.value ? 'active' : ''}`}
-              onClick={() => {
-                setType(workoutType.value);
-                if (workoutType.value !== 'other') {
-                  setOtherExercise('');
+          {workoutTypes.map((workoutType) => {
+            const IconComponent = workoutType.icon;
+            const isActive = type === workoutType.value;
+            return (
+              <button
+                key={workoutType.value}
+                type="button"
+                className={`type-button ${isActive ? 'active' : ''} ${workoutType.value === 'yoga' ? 'yoga-button' : ''}`}
+                style={
+                  workoutType.value === 'yoga'
+                    ? {
+                        backgroundImage: `url(${yogaBgImage}), linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.06) 50%, rgba(99, 102, 241, 0.08) 100%)`,
+                        backgroundSize: 'cover, cover',
+                        backgroundPosition: 'center, center',
+                        backgroundBlendMode: 'normal, overlay',
+                        backgroundRepeat: 'no-repeat'
+                      }
+                    : undefined
                 }
-              }}
-            >
-              <span className="type-icon">{workoutType.icon}</span>
-              <span className="type-label">{workoutType.label}</span>
-            </button>
-          ))}
+                onClick={() => {
+                  setType(workoutType.value);
+                  if (workoutType.value !== 'other') {
+                    setOtherExercise('');
+                  }
+                }}
+              >
+                {workoutType.value !== 'yoga' && (
+                  <span className="type-icon">
+                    <IconComponent size={40} isActive={isActive} />
+                  </span>
+                )}
+                <span className="type-label">{workoutType.label}</span>
+              </button>
+            );
+          })}
         </div>
         
         {/* Show text input if "Other" is selected */}
@@ -325,6 +366,9 @@ function WorkoutForm({ onSubmit, initialDate, onClose }) {
       {/* Date Selection */}
       <div className="form-group">
         <label className="form-label">
+          <span className="label-icon">
+            <FiCalendar />
+          </span>
           When did you do this?
         </label>
         <div className="date-selector">
@@ -363,7 +407,9 @@ function WorkoutForm({ onSubmit, initialDate, onClose }) {
         <div className="form-row">
           <div className="form-group">
             <label className="form-label">
-              <span className="label-icon">🕐</span>
+              <span className="label-icon">
+                <FiClock />
+              </span>
               Hours (Optional)
             </label>
             <input
@@ -378,7 +424,9 @@ function WorkoutForm({ onSubmit, initialDate, onClose }) {
           </div>
           <div className="form-group">
             <label className="form-label">
-              <span className="label-icon">⏱️</span>
+              <span className="label-icon">
+                <FiClock />
+              </span>
               Minutes (Optional)
             </label>
             <input
@@ -397,14 +445,16 @@ function WorkoutForm({ onSubmit, initialDate, onClose }) {
       {/* Notes */}
       <div className="form-group">
         <label className="form-label">
-          <span className="label-icon">📝</span>
+          <span className="label-icon">
+            <FiEdit3 />
+          </span>
           Notes (Optional)
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows="3"
-          placeholder="How did it feel? Any observations? 💭"
+          placeholder="How did it feel? Any observations?"
           className="form-textarea"
         />
       </div>

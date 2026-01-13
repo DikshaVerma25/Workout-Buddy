@@ -1,5 +1,7 @@
 import React from 'react';
 import { format, isToday } from 'date-fns';
+import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
+import { getWorkoutIcon } from './WorkoutIcons';
 import './WorkoutList.css';
 
 function WorkoutList({ workouts, onDelete }) {
@@ -7,7 +9,9 @@ function WorkoutList({ workouts, onDelete }) {
     return (
       <div className="card">
         <div className="empty-state">
-          <div className="empty-icon">💪</div>
+          <div className="empty-icon">
+            <HiOutlineClipboardDocumentList />
+          </div>
           <p>No workouts logged yet. Start by logging your first workout!</p>
         </div>
       </div>
@@ -28,21 +32,7 @@ function WorkoutList({ workouts, onDelete }) {
   const sortedDates = Object.keys(groupedWorkouts).sort((a, b) => new Date(b) - new Date(a));
 
   const getWorkoutTypeIcon = (type) => {
-    const icons = {
-      'strength training': '💪',
-      'cardio': '🏃',
-      'biking': '🚴',
-      'yoga': '🧘',
-      'pilates': '🤸',
-      'zumba': '💃',
-      'hiit': '⚡',
-      'crossfit': '🔥',
-      'light walk': '🚶',
-      'sports and activities': '⚽',
-      'breath work': '🌬️',
-      'other': '✨'
-    };
-    return icons[type] || '💪';
+    return getWorkoutIcon(type, 32, false);
   };
 
   const getWorkoutTypeLabel = (type) => {
@@ -86,10 +76,12 @@ function WorkoutList({ workouts, onDelete }) {
                 const isDurationBased = workout.duration || (!isStrength && durationRequiredTypes.includes(workout.type));
                 
                 return (
-                  <div key={workout.id} className="workout-card">
+                    <div key={workout.id} className="workout-card">
                     <div className="workout-header">
                       <div className="workout-title-group">
-                        <span className="workout-type-icon">{getWorkoutTypeIcon(workout.type || 'strength')}</span>
+                        <span className="workout-type-icon">
+                          {getWorkoutTypeIcon(workout.type || 'strength')}
+                        </span>
                         <div>
                           <h4>{workout.exercise}</h4>
                           <span className="workout-type-label">{getWorkoutTypeLabel(workout.type || 'strength')}</span>
@@ -164,7 +156,7 @@ function WorkoutList({ workouts, onDelete }) {
                     
                     {workout.notes && (
                       <div className="workout-notes">
-                        <strong>💭 Notes:</strong> {workout.notes}
+                        <strong>Notes:</strong> {workout.notes}
                       </div>
                     )}
                     
