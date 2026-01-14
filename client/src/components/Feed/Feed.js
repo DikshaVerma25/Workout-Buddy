@@ -71,7 +71,7 @@ function Feed() {
       <Navbar />
       <div className="container">
         <h1 className="page-title">Friends' Workouts</h1>
-        <p className="page-subtitle">See what your friends have been up to! 💪</p>
+        <p className="page-subtitle">See what your friends have been up to!</p>
 
         {sortedDates.map(date => (
           <div key={date} className="feed-day">

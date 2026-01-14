@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format, isToday } from 'date-fns';
+import { FiActivity, FiZap, FiClock, FiPlus, FiX } from 'react-icons/fi';
+import { MdLocalFireDepartment } from 'react-icons/md';
 import Navbar from '../Layout/Navbar';
 import WorkoutForm from './WorkoutForm';
 import WorkoutList from './WorkoutList';
@@ -209,12 +211,22 @@ function Dashboard() {
               }
             }}
           >
-            {showForm ? '❌ Cancel' : '✨ Log Workout'}
+            {showForm ? (
+              <>
+                <FiX style={{ marginRight: '0.5rem', fontSize: '1.1rem' }} />
+                Cancel
+              </>
+            ) : (
+              <>
+                <FiPlus style={{ marginRight: '0.5rem', fontSize: '1.1rem' }} />
+                Log Workout
+              </>
+            )}
           </button>
         </div>
 
         {showForm && (
-          <div className="card">
+          <div className="card workout-form-card">
             <WorkoutForm 
               onSubmit={handleAddWorkout} 
               initialDate={selectedDate}
@@ -228,23 +240,31 @@ function Dashboard() {
 
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">💪</div>
+            <div className="stat-icon">
+              <FiActivity />
+            </div>
             <div className="stat-value">{totalWorkouts}</div>
             <div className="stat-label">Total Workouts</div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">🔥</div>
+            <div className="stat-icon">
+              <MdLocalFireDepartment />
+            </div>
             <div className="stat-value">{todayWorkouts.length}</div>
             <div className="stat-label">Today's Workouts</div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">⚡</div>
+            <div className="stat-icon">
+              <FiZap />
+            </div>
             <div className="stat-value">{streak}</div>
             <div className="stat-label">Day Streak</div>
           </div>
           {totalDuration > 0 && (
             <div className="stat-card">
-              <div className="stat-icon">⏱️</div>
+              <div className="stat-icon">
+                <FiClock />
+              </div>
               <div className="stat-value">
                 {totalDuration >= 60 
                   ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m`
@@ -354,23 +374,6 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Show form when adding workout */}
-        {!loading && showForm && (
-          <div className="card">
-            <WorkoutForm 
-              onSubmit={handleAddWorkout}
-              initialDate={selectedDate || null}
-              onClose={() => {
-                setShowForm(false);
-                // Don't clear selectedDate if there are workouts on that date
-                if (!selectedDate || selectedDateWorkouts.length === 0) {
-                  setSelectedDate(null);
-                  setSelectedDateWorkouts([]);
-                }
-              }}
-            />
-          </div>
-        )}
 
         {loading && (
           <div className="loading">Loading workouts...</div>

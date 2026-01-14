@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FiAward, FiActivity } from 'react-icons/fi';
+import { MdEmojiEvents } from 'react-icons/md';
 import Navbar from '../Layout/Navbar';
 import './Leaderboard.css';
 
@@ -28,11 +30,11 @@ function Leaderboard() {
     }
   };
 
-  const getRankEmoji = (index) => {
-    if (index === 0) return '🥇';
-    if (index === 1) return '🥈';
-    if (index === 2) return '🥉';
-    return `${index + 1}.`;
+  const getRankIcon = (index) => {
+    if (index === 0) return <MdEmojiEvents style={{ color: '#ffd700' }} />;
+    if (index === 1) return <MdEmojiEvents style={{ color: '#c0c0c0' }} />;
+    if (index === 2) return <MdEmojiEvents style={{ color: '#cd7f32' }} />;
+    return <span className="rank-number-text">{index + 1}.</span>;
   };
 
   return (
@@ -40,7 +42,7 @@ function Leaderboard() {
       <Navbar />
       <div className="container">
         <h1 className="page-title">Leaderboard</h1>
-        <p className="page-subtitle">Compete with your friends and see who's on top! 🏆</p>
+        <p className="page-subtitle">Compete with your friends and see who's on top!</p>
 
         <div className="card">
           <div className="period-selector">
@@ -84,7 +86,7 @@ function Leaderboard() {
                   className={`leaderboard-item ${entry.isCurrentUser ? 'current-user' : ''}`}
                 >
                   <div className="leaderboard-rank">
-                    <span className="rank-number">{getRankEmoji(index)}</span>
+                    <span className="rank-number">{getRankIcon(index)}</span>
                   </div>
                   <div className="leaderboard-avatar">
                     {entry.username.charAt(0).toUpperCase()}
@@ -96,18 +98,12 @@ function Leaderboard() {
                     </div>
                     <div className="leaderboard-stats">
                       <div className="stat-item">
+                        <FiActivity style={{ marginRight: '0.5rem', opacity: 0.7 }} />
                         <span className="stat-label">Workouts</span>
                         <span className="stat-value">{entry.totalWorkouts}</span>
                       </div>
                     </div>
                   </div>
-                  {index < 3 && (
-                    <div className="leaderboard-medal">
-                      {index === 0 && '🏆'}
-                      {index === 1 && '🥈'}
-                      {index === 2 && '🥉'}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
